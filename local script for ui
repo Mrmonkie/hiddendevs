@@ -1,0 +1,56 @@
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local burstEvent = ReplicatedStorage:WaitForChild("BurstEvent")
+
+local image = script.Parent
+
+image.ImageTransparency = 1
+image.Visible = false
+
+local function burstUI()
+
+	image.Visible = true
+	image.ImageTransparency = 1
+
+	local fadeIn = TweenService:Create(
+		image,
+		TweenInfo.new(
+			0.5,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		),
+		{
+			ImageTransparency = 0
+		}
+	)
+
+	local fadeOut = TweenService:Create(
+		image,
+		TweenInfo.new(
+			4,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		),
+		{
+			ImageTransparency = 1
+		}
+	)
+
+	fadeIn:Play()
+
+	fadeIn.Completed:Connect(function()
+
+		task.wait(1)
+
+		fadeOut:Play()
+
+		fadeOut.Completed:Connect(function()
+			image.Visible = false
+		end)
+	end)
+end
+
+burstEvent.Event:Connect(function()
+	burstUI()
+end)
