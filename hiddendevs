@@ -1,5 +1,6 @@
 local module = {}
 --Services/references
+local image = script.Parent
 local player = game.Players.LocalPlayer
 local character = script.Parent
 local humanoid = character:WaitForChild("Humanoid")
@@ -9,6 +10,7 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
+local burstEvent = ReplicatedStorage:WaitForChild("BurstEvent")
 
 local movementFolder = ReplicatedStorage:WaitForChild("Animations"):WaitForChild("Movement")
 local visualFolder = ReplicatedStorage:WaitForChild("Visuals")
@@ -23,9 +25,9 @@ local camera = workspace.CurrentCamera
 
 local root = character:WaitForChild("HumanoidRootPart")
 --animation priorites
-normalAnim.Priority = Enum.AnimationPriority.Action
-fastAnim.Priority = Enum.AnimationPriority.Action2
-burstAnim.Priority = Enum.AnimationPriority.Action3
+normalAnim.Priority = Enum.AnimationPriority.Movement
+fastAnim.Priority = Enum.AnimationPriority.Movement
+burstAnim.Priority = Enum.AnimationPriority.Movement
 
 local running = false
 local movingTime = 0
@@ -46,6 +48,26 @@ local function tweenFOV(value, time)
 	currentTween:Play()
 end
 --clones the BurstVfx thats in replicated storage and places it infront of the player
+--blue ui that appears when you burst connected to a local script by a bindable event
+local function burstUI()
+	image.ImageTransparency = 1
+	image.Visible = true
+
+	local tween = TweenService:Create(
+		image,
+		TweenInfo.new(
+			0.5,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		),
+		{
+			ImageTransparency = 0
+		}
+	)
+
+	tween:Play()
+end
+
 local function BurstVFX()
 	local burst = BurstVfx:Clone()
 	burst.Parent = workspace
@@ -65,6 +87,13 @@ local function BurstVFX()
 
 	part.Anchored = true
 
+	local connection
+	connection = RunService.RenderStepped:Connect(function()
+		if not running or not part or not part.Parent then
+			connection:Disconnect()
+			burst:Destroy()
+			return
+		end
 
 		local targetCFrame = root.CFrame * CFrame.new(0, 0, -5)
 
@@ -124,7 +153,7 @@ local function glowBlueHighlight()
 	glowBlue.FillTransparency = 0.5
 	glowBlue.FillColor = Color3.fromRGB(55, 151, 240)
 	glowBlue.OutlineTransparency = 0.5
-	
+
 	local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	local tween = TweenService:Create(glowBlue, tweenInfo, {
 		FillTransparency = 1,
@@ -141,12 +170,6 @@ end
 RunService.RenderStepped:Connect(function(dt)
 	if running and humanoid.MoveDirection.Magnitude > 0 then
 		movingTime += dt
-		
-		if not running or not part or not part.Parent then
-			connection:Disconnect()
-			burst:Destroy()
-			return
-		end
 
 		if movingTime >= 9 then
 			if not burstAnim.IsPlaying then
@@ -164,7 +187,11 @@ RunService.RenderStepped:Connect(function(dt)
 
 				if not didBurst then
 					didBurst = true
+
 					BurstVFX()
+
+					
+					burstEvent:Fire()
 				end
 			end
 		elseif movingTime >= 4 then
