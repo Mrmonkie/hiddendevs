@@ -1,3 +1,5 @@
+--Connected Discord-GitHub discord:fumble120 roblox:callmejosh3442
+
 local module = {}
 
 --// UI reference for the blue burst image effect
